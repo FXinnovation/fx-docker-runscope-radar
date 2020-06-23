@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -ex
+
+#####
+# Build dependencies
+#####
+
+apt-get update
+
+apt-get --yes install curl unzip
+
+#####
+# Creating user
+#####
+
+adduser runscope --uid 1000 --system
+
+#####
+# Installing component
+#####
+
+curl -sSL https://s3.amazonaws.com/runscope-downloads/runscope-radar/${RUNSCOPE_RADAR_VERSION}/linux-amd64/runscope-radar.zip -o /resources/runscope-radar.zip
+
+unzip /resources/runscope-radar.zip -d /usr/local/bin/
+
+#####
+# Image Cleaning
+#####
+
+apt-get remove --purge --yes curl unzip
+
+apt-get autoremove --purge --yes
+
+apt-get clean
+
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+#####
+# Hardening
+#####
+
+sed -i -e "s/^PASS_MAX_DAYS\s\+99999/PASS_MAX_DAYS   60/" /etc/login.defs
+sed -i -e "s/^PASS_MIN_DAYS\s\+0/PASS_MIN_DAYS	7/" /etc/login.defs
+sed -i -e "s/^UMASK\s\+022/UMASK	027/" /etc/login.defs
